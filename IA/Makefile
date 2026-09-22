@@ -3,7 +3,7 @@ TARGET = busqueda
 CXX = g++
 CXXFLAGS = -Wall -g
 
-SRCS = main.cc 
+SRCS = main.cc node.cc
 OBJS = $(SRCS:.cc=.o)
 
 $(TARGET): $(OBJS)
