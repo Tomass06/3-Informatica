@@ -81,8 +81,8 @@ int main(int argc, char* argv[]){
   matrix map;
   std::cout << "Rellenando mapa...\n";
   FillMap(map, filein);
-  int map_size_x = map.size();
-  int map_size_y = map[0].size();
+  int map_size_x = map[0].size();
+  int map_size_y = map.size();
 
   // Inicio algoritmo busqueda del camino
 
@@ -99,9 +99,10 @@ int main(int argc, char* argv[]){
       if(value == 10) {
         pos_x_dest = n_col;
         pos_y_dest = n_row;
+        map[n_row][n_col] = 2; // Cambio el valor de la casilla final para que no afecte a la busqueda
       } else if(value == 0) {
-        pos_x_ini = n_row;
-        pos_y_ini = n_col;
+        pos_x_ini = n_col;
+        pos_y_ini = n_row;
       }
       n_col++;
     }
@@ -125,13 +126,17 @@ int main(int argc, char* argv[]){
     }
     Node aux = A[indice_menor_coste]; 
     A.erase(A.begin() + indice_menor_coste); // quitar de la abrieta y meter en la cerrada
+    std::cout << "Añadiendo a C: (" << aux.pos_x_ << "," << aux.pos_y_ << "):" << aux.value_pos_ << "\n";
     C.push_back(aux);
 
     if(aux.pos_x_ == pos_x_dest && aux.pos_y_ == pos_y_dest) { // Si esta en el estado final acaba
       std::cout << "Llegó al estado final\nLista de los nodos cerrados:\n";
+      std::cout << "Coord fin: (" << pos_x_dest << "," << pos_y_dest << ")\n";
+      std::cout << "Coord ini: (" << pos_x_ini << "," << pos_y_ini << ")\n";
+
       int contador{0};
       for(Node n : C) {
-        std::cout << contador << "(" << n.pos_x_ + 1 << "," << n.pos_y_ + 1 << ")\n";
+        std::cout << contador << "(" << n.pos_x_ << "," << n.pos_y_ << ")\n";
         contador++;
       }
       // Rellenar
@@ -142,42 +147,66 @@ int main(int argc, char* argv[]){
     int aux_y = aux.pos_y_;
     // Explorar e insertar movimientos posibles
     // Si no es un obstaculo, esta dentro del mapa y no esta en los nodos cerrados es valido
-    if(aux_x + 1 < map_size_x && map[aux_x + 1][aux_y] != -1 && !ExisteNodoEnVector(aux_x + 1, aux_y, C)) {
-      int v = aux.value_pos_ + map[aux_x + 1][aux_y];
-      int f = v + H(aux_x + 1,aux_y, pos_x_dest, pos_y_dest);
+    if(aux_x + 1 < map_size_x && map[aux_y][aux_x + 1] != -1 
+      && !ExisteNodoEnVector(aux_x + 1, aux_y, C)
+      && !ExisteNodoEnVector(aux_x + 1, aux_y, A)) {
+      int v = aux.value_pos_ + map[aux_y][aux_x + 1];
+      int f = v + 2 * H(aux_x + 1,aux_y, pos_x_dest, pos_y_dest);
       Node temp = Node(aux_x + 1, aux_y, v, f);
+      std::cout << "Añadiendo a A: (" << temp.pos_x_ << "," << temp.pos_y_ << "):" << temp.value_pos_ << "\n";
       A.push_back(temp);
+    } else {
+      // std::cout << "No cumple (" << aux_x + 1 << "," << aux_y << "): " << map[aux_x + 1][aux_y] << "\n";
     }
-    if(aux_x - 1 >= 0 && map[aux_x - 1][aux_y] != -1 && !ExisteNodoEnVector(aux_x - 1, aux_y, C)) {
-      int v = aux.value_pos_ + map[aux_x - 1][aux_y];
-      int f = v + H(aux_x - 1,aux_y, pos_x_dest, pos_y_dest);
+    if(aux_x - 1 >= 0 && map[aux_y][aux_x - 1] != -1 
+      && !ExisteNodoEnVector(aux_x - 1, aux_y, C)
+      && !ExisteNodoEnVector(aux_x - 1, aux_y, A)) {
+      int v = aux.value_pos_ + map[aux_y][aux_x - 1];
+      int f = v + 2 * H(aux_x - 1,aux_y, pos_x_dest, pos_y_dest);
       Node temp = Node(aux_x - 1, aux_y, v, f);
+      std::cout << "Añadiendo a A: (" << temp.pos_x_ << "," << temp.pos_y_ << "):" << temp.value_pos_ << "\n";
       A.push_back(temp);
+    } else {
+      // std::cout << "No cumple (" << aux_x - 1 << "," << aux_y << "): " << map[aux_x - 1][aux_y] << "\n";
     }
-    if(aux_y + 1 < map_size_y && map[aux_x][aux_y + 1] != -1 && !ExisteNodoEnVector(aux_x, aux_y + 1, C)) {
-      int v = aux.value_pos_ + map[aux_x][aux_y + 1];
-      int f = v + H(aux_x,aux_y + 1, pos_x_dest, pos_y_dest);
+    if(aux_y + 1 < map_size_y && map[aux_y + 1][aux_x] != -1 
+      && !ExisteNodoEnVector(aux_x, aux_y + 1, C)
+      && !ExisteNodoEnVector(aux_x, aux_y + 1, A)) {
+      int v = aux.value_pos_ + map[aux_y + 1][aux_x];
+      int f = v + 2 * H(aux_x,aux_y + 1, pos_x_dest, pos_y_dest);
       Node temp = Node(aux_x, aux_y + 1, v, f);
+      std::cout << "Añadiendo a A: (" << temp.pos_x_ << "," << temp.pos_y_ << "):" << temp.value_pos_ << "\n";
       A.push_back(temp);
+    } else {
+      // std::cout << "No cumple (" << aux_x << "," << aux_y + 1 << "): " << map[aux_x][aux_y + 1] << "\n";
     }
-    if(aux_y - 1 >= 0 && map[aux_x][aux_y - 1] != -1 && !ExisteNodoEnVector(aux_x, aux_y - 1, C)) {
-      int v = aux.value_pos_ + map[aux_x][aux_y - 1];
-      int f = v + H(aux_x,aux_y - 1, pos_x_dest, pos_y_dest);
+    if(aux_y - 1 >= 0 && map[aux_y - 1][aux_x] != -1 
+      && !ExisteNodoEnVector(aux_x, aux_y - 1, C)
+      && !ExisteNodoEnVector(aux_x, aux_y - 1, A)) {
+      int v = aux.value_pos_ + map[aux_y - 1][aux_x];
+      int f = v + 2 * H(aux_x,aux_y - 1, pos_x_dest, pos_y_dest);
       Node temp = Node(aux_x, aux_y - 1, v, f);
+      std::cout << "Añadiendo a A: (" << temp.pos_x_ << "," << temp.pos_y_ << "):" << temp.value_pos_ << "\n";
       A.push_back(temp);
+    } else {
+      // std::cout << "No cumple (" << aux_x << "," << aux_y - 1 << "): " << map[aux_x][aux_y - 1] << "\n";
     }
 
 
   }
 
 
-  // Test
-  // for(const auto& row : map) {
-  //   for(int value : row) {
-  //     std::cout << value << " ";
-  //   }
-  //   std::cout << "\n";
-  // }
+  std::cout << "Recorrido: \n";
+  for(size_t i{0}; i < map.size(); i++) {
+    for(size_t j{0}; j < map[i].size(); j++) {
+      if(ExisteNodoEnVector(j, i, C)) {
+        std::cout << "* ";
+      } else {
+        std::cout << map[i][j] << " ";
+      }
+    }
+    std::cout << "\n";
+  }
 
   return 0;
 }
